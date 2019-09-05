@@ -13,6 +13,14 @@
 /* Step 4: Pass the data received from Github into your function, 
            create a new component and add it to the DOM as a child of .cards
 */
+axios.get('https://api.github.com/users/tlaudahl')
+  .then(response => {
+    // console.log(response.data);
+    const newCard = githubCard(response.data);
+    cards.appendChild(newCard);
+  }).catch(error => {
+    console.log('The data did not return', error);
+  })
 
 /* Step 5: Now that you have your own card getting added to the DOM, either 
           follow this link in your browser https://api.github.com/users/<Your github name>/followers 
@@ -23,8 +31,31 @@
           Using that array, iterate over it, requesting data for each user, creating a new card for each
           user, and adding that card to the DOM.
 */
-
 const followersArray = [];
+
+axios.get('https://api.github.com/users/tlaudahl/followers')
+  .then(response => {
+    // console.log(response);
+    response.data.forEach(item => {
+      // followersArray.push(item.url);
+      axios.get(item.url).then(r => {
+        const newCard = githubCard(r.data);
+        cards.appendChild(newCard);
+      })
+    })
+  })
+  .catch(error => {
+    console.log('The data did not return', error);
+  });
+
+followersArray.forEach(item => {
+  console.log(item);
+  axios.get(item).then(response => {
+    // console.log(response);
+    const newCard = githubCard(response.data);
+    cards.appendChild(newCard);
+  })
+})
 
 /* Step 3: Create a function that accepts a single object as its only argument,
           Using DOM methods and properties, create a component that will return the following DOM element:
@@ -44,6 +75,9 @@ const followersArray = [];
 </div>
 */
 
+// The main div we want to add githubCard components to
+const cards = document.querySelector('.cards');
+
 function githubCard(data) {
   // Main card
   const mainCard = document.createElement('div');
@@ -51,7 +85,7 @@ function githubCard(data) {
 
   // Img for main card
   const mainCardImg = document.createElement('img');
-  img.src = data.avatar_url
+  mainCardImg.src = data.avatar_url
   // Append to main card
   mainCard.appendChild(mainCardImg);
 
@@ -102,6 +136,24 @@ function githubCard(data) {
   const followingP = document.createElement('p');
   followingP.textContent = `Following: ${data.following}`;
   cardInfo.append(followingP);
+
+  // Bio
+  const bioP = document.createElement('p');
+  bioP.textContent = `Bio: ${data.bio}`
+  // Append to cardInfo div
+  cardInfo.appendChild(bioP);
+  
+
+  // Calendar Div
+  const calendarDiv = document.createElement('div');
+  calendarDiv.style.backgroundColor = 'gray';
+  mainCard.appendChild(calendarDiv);
+
+  const calendarImg = document.createElement('img');
+  calendarImg.src = `http://ghchart.rshah.org/${data.login}`;
+  calendarImg.style.width = '100%';
+  calendarDiv.appendChild(calendarImg);
+
 
   // Return the card
   return mainCard;
